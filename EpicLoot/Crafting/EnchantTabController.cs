@@ -156,8 +156,8 @@ namespace EpicLoot.Crafting
             }
 
             var isArtisan = station.m_name == "$piece_artisanstation";
-            var isForgeWithEnchanter = station.m_name == "$piece_forge" && station.m_attachedExtensions.Find(x => x.name.StartsWith("piece_enchanter"));
-            return isArtisan || isForgeWithEnchanter;
+            var isWorkbenchWithEnchanter = station.m_name == "$piece_workbench" && station.m_attachedExtensions.Find(x => x.name.StartsWith("piece_enchanter"));
+            return isArtisan || isWorkbenchWithEnchanter;
         }
 
         public void OnSelectedRarity(ItemRarity rarity)

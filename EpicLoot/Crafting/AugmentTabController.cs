@@ -196,8 +196,8 @@ namespace EpicLoot.Crafting
             }
 
             var isArtisan = station.m_name == "$piece_artisanstation";
-            var isForgeWithEnchanter = station.m_name == "$piece_forge" && station.m_attachedExtensions.Find(x => x.name.StartsWith("piece_augmenter"));
-            return isArtisan || isForgeWithEnchanter;
+            var isWorkbenchWithEnchanter = station.m_name == "$piece_workbench" && station.m_attachedExtensions.Find(x => x.name.StartsWith("piece_augmenter"));
+            return isArtisan || isWorkbenchWithEnchanter;
         }
 
         public override void UpdateRecipe(InventoryGui __instance, Player player, float dt, Image bgImage)

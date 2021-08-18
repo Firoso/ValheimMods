@@ -351,24 +351,25 @@ namespace EpicLoot
             {
                 Table = "_HammerPieceTable",
                 CraftingStation = "piece_workbench",
-                ExtendStation = "forge",
+                ExtendStation = "piece_workbench",
                 Resources = new List<RecipeRequirementConfig>
                 {
                     new RecipeRequirementConfig { item = "Stone", amount = 10 },
-                    new RecipeRequirementConfig { item = "SurtlingCore", amount = 3 },
-                    new RecipeRequirementConfig { item = "Copper", amount = 3 },
+                    new RecipeRequirementConfig { item = "Wood", amount = 25 },
+                    new RecipeRequirementConfig { item = "ShardMagic", amount = 50 },
                 }
             });
             LoadStationExtension(assetBundle, "piece_augmenter", new PieceDef()
             {
                 Table = "_HammerPieceTable",
                 CraftingStation = "piece_workbench",
-                ExtendStation = "forge",
+                ExtendStation = "piece_workbench",
                 Resources = new List<RecipeRequirementConfig>
                 {
-                    new RecipeRequirementConfig { item = "Obsidian", amount = 10 },
-                    new RecipeRequirementConfig { item = "Crystal", amount = 3 },
-                    new RecipeRequirementConfig { item = "Bronze", amount = 3 },
+                    new RecipeRequirementConfig { item = "RunestoneRare", amount = 1 },
+                    new RecipeRequirementConfig { item = "RunestoneMagic", amount = 5 },
+                    new RecipeRequirementConfig { item = "ShardRare", amount = 50 },
+                    new RecipeRequirementConfig { item = "Bronze", amount = 15 },
                 }
             });
 
@@ -517,6 +518,12 @@ namespace EpicLoot
                 pieceTable.m_pieces.Add(prefab);
 
                 var pieceStation = craftingStations.Find(x => x.name == pieceDef.CraftingStation);
+                if (pieceStation == null)
+                {
+                    LogError($"Tried to register piece ({prefab}) but could not find piece station ({pieceStation})!");
+                    continue;
+                }
+
                 piece.m_craftingStation = pieceStation;
 
                 var resources = new List<Piece.Requirement>();
@@ -539,6 +546,10 @@ namespace EpicLoot
                     {
                         var station = stationPrefab.GetComponent<CraftingStation>();
                         stationExt.m_craftingStation = station;
+                    }
+                    else
+                    {
+                        LogWarning($"Tried to register piece ({prefab}) but could not find station Extension Component ({pieceDef.ExtendStation})!");
                     }
 
                     var otherExt = pieceTable.m_pieces.Find(x => x.GetComponent<StationExtension>() != null);
