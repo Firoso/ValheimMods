@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -44,24 +45,33 @@ namespace EpicLoot.Adventure
 
         private bool HasBeenSetup()
         {
-            var bountyID = _zdo.GetString(BountyTarget.BountyIDKey);
+            var bountyID = _zdo.GetString(BountyIDKey);
             return !string.IsNullOrEmpty(bountyID);
         }
 
         private void OnDeath()
         {
             EpicLoot.LogWarning("BountyTarget.OnDeath");
-            var pkg = new ZPackage();
-            _bountyInfo.ToPackage(pkg);
+            if (ZNet.instance.IsServer() || !ZNet.instance.IsServer() && !ZNet.instance.IsDedicated())
+            {
+                var pkg = new ZPackage();
+                _bountyInfo.ToPackage(pkg);
 
-            EpicLoot.LogWarning($"SENDING -> RPC_SlayBountyTarget: {_monsterID} ({(_isAdd ? "minion" : "target")})");
-            ZRoutedRpc.instance.InvokeRoutedRPC("SlayBountyTarget", pkg, _monsterID, _isAdd);
+                EpicLoot.LogWarning($"SENDING -> RPC_SlayBountyTarget: {_monsterID} ({(_isAdd ? "minion" : "target")})");
+                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SlayBountyTarget", pkg, _monsterID, _isAdd);
+            }
+            else
+            {
+                var bountyID = _zdo.GetString(BountyIDKey);
+                EpicLoot.LogWarning($"SENDING -> RPC_SlayBountyTargetFromBountyId: (bountyID={bountyID}) {_monsterID} ({(_isAdd ? "minion" : "target")})");
+                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SlayBountyIDTarget", _monsterID, _isAdd, bountyID);
+            }
         }
 
         public void Initialize(BountyInfo bounty, string monsterID, bool isAdd)
         {
             _zdo.Set(BountyIDKey, bounty.ID);
-            if (ZNet.instance.IsServer() && ZNet.instance.IsDedicated() || !ZNet.instance.IsServer() && !ZNet.instance.IsDedicated())
+            if (ZNet.instance.IsServer() || !ZNet.instance.IsServer() && !ZNet.instance.IsDedicated())
             {
                 var pkg = new ZPackage();
                 bounty.ToPackage(pkg);
@@ -81,11 +91,22 @@ namespace EpicLoot.Adventure
 
         public void Reinitialize()
         {
-            if (ZNet.instance.IsServer() && ZNet.instance.IsDedicated() || !ZNet.instance.IsServer() && !ZNet.instance.IsDedicated())
+            if (ZNet.instance.IsServer() || !ZNet.instance.IsServer() && !ZNet.instance.IsDedicated())
             { 
                 var pkgString = _zdo.GetString(BountyDataKey);
                 var pkg = new ZPackage(pkgString);
-                _bountyInfo = BountyInfo.FromPackage(pkg);
+                try
+                {
+                    _bountyInfo = BountyInfo.FromPackage(pkg);
+                }
+                catch (Exception)
+                {
+                    Debug.LogError($"[EpicLoot] Error loading bounty info on creature ({name})! Possibly old or outdated bounty target, destroying creature.\nBountyData:\n{pkgString}");
+                    _zdo.Set("BountyTarget", "");
+                    _zdo.Set(BountyDataKey, "");
+                    _character.m_nview.Destroy();
+                    return;
+                }
             }
             _monsterID = _zdo.GetString(MonsterIDKey);
             _isAdd = _zdo.GetBool(IsAddKey);
@@ -100,14 +121,13 @@ namespace EpicLoot.Adventure
             {
                 return character.GetMaxHealth() * AdventureDataManager.Config.Bounties.AddsHealthMultiplier;
             }
-            else if (bounty.RewardGold > 0)
+
+            if (bounty.RewardGold > 0)
             {
                 return character.GetMaxHealth() * AdventureDataManager.Config.Bounties.GoldHealthMultiplier;
             }
-            else
-            {
-                return character.GetMaxHealth() * AdventureDataManager.Config.Bounties.IronHealthMultiplier;
-            }
+
+            return character.GetMaxHealth() * AdventureDataManager.Config.Bounties.IronHealthMultiplier;
         }
 
         private static string GetTargetName(string originalName, bool isAdd, string targetName)
@@ -131,10 +151,8 @@ namespace EpicLoot.Adventure
 
                 return 1;
             }
-            else
-            {
-                return bounty.Target.Level;
-            }
+
+            return bounty.Target.Level;
         }
     }
 

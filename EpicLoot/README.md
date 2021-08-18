@@ -1,4 +1,4 @@
-# Epic Loot v0.8.2 - Legendary Sets Update!
+# Epic Loot v0.8.4 - Legendary Sets Update!
 Author: RandyKnapp
 Source: [Github](https://github.com/RandyKnapp/ValheimMods/blob/main/EpicLoot/)
 
@@ -27,6 +27,7 @@ Contibutions from the following modders was invaluable and appreciated:
   * [nanonull](https://github.com/nanonull) - bugfixes, lifesteal
   * [xPucTu4](https://github.com/xPucTu4) - bugfixes
   * LitanyOfFire - legendary definitions
+  * [Digitalroot](https://github.com/Digitalroot) - Help with testing
 
 3D Models:
   * "Fantasy Longsword" (https://skfb.ly/ontRY) by Faber is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
